@@ -10,13 +10,16 @@
   </style>
 </head>
 <body>
-  <h2>Gemini Template Generator</h2>
+  <h2>Template Generator</h2>
 
   <label>Template:</label>
-  <textarea id="template" placeholder="Example: Write a YouTube description for {{TEXT}}"></textarea>
+  <textarea id="template" placeholder="Example: Create a lesson plan based on {{CURRICULUMSTANDARDS}} for {{TARGETGRADELEVEL}} students."></textarea>
 
-  <label>Insert Text:</label>
-  <textarea id="insert" placeholder="Paste your video text here"></textarea>
+  <label>Curriculum Standards:</label>
+  <textarea id="curriculum" placeholder="Paste curriculum standards here"></textarea>
+
+  <label>Target Grade Level:</label>
+  <textarea id="grade" placeholder="Paste target grade level here"></textarea>
 
   <button onclick="generate()">Generate</button>
 
@@ -24,13 +27,17 @@
   <pre id="output"></pre>
 
   <script>
-    const API_KEY = "AIzaSyAEWV3k5PxqIv4SyARIcxm1EWBfG6n8PDw"; // Replace with your Gemini key
+    const API_KEY = "620972326283"; // Replace with your Gemini key
 
     async function generate() {
       const template = document.getElementById("template").value;
-      const insertText = document.getElementById("insert").value;
+      const curriculum = document.getElementById("curriculum").value;
+      const grade = document.getElementById("grade").value;
 
-      const finalPrompt = template.replace("{{TEXT}}", insertText);
+      // Replace placeholders
+      let finalPrompt = template
+        .replace("{{CURRICULUMSTANDARDS}}", curriculum)
+        .replace("{{TARGETGRADELEVEL}}", grade);
 
       document.getElementById("output").innerText = "⏳ Generating...";
 
