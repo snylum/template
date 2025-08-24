@@ -1,14 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Template Filler</title>
+  <title>Template Filler & Cleaner</title>
   <style>
     body { 
       font-family: monospace; 
-      max-width: 700px; 
-      margin: auto; 
+      margin: 0; 
       padding: 20px; 
+      display: flex; 
+      gap: 20px; 
       line-height: 1.4;
+    }
+    .column {
+      flex: 1; 
+      max-width: 50%;
     }
     h2, h3 { margin-bottom: 10px; }
     label { display: block; margin-top: 15px; margin-bottom: 5px; }
@@ -44,38 +49,58 @@
       font-family: monospace; 
       font-size: 14px; 
       margin-top: 8px;
+      min-height: 60px;
     }
     .btn-row { margin: 8px 0; }
   </style>
 </head>
 <body>
-  <h2>Template Filler</h2>
+  <!-- LEFT COLUMN -->
+  <div class="column">
+    <h2>Template Filler</h2>
 
-  <label>Template:</label>
-  <textarea id="template" placeholder="Example: Create a lesson plan based on {{CURRICULUMSTANDARDS}} for {{TARGETGRADELEVEL}} students."></textarea>
-  <div class="btn-row">
-    <button onclick="pinTemplate()">📌 Pin Template</button>
-    <button onclick="clearPinned()">❌ Clear Pinned</button>
+    <label>Template:</label>
+    <textarea id="template" placeholder="Example: Create a lesson plan based on {{CURRICULUMSTANDARDS}} for {{TARGETGRADELEVEL}} students."></textarea>
+    <div class="btn-row">
+      <button onclick="pinTemplate()">📌 Pin Template</button>
+      <button onclick="clearPinned()">❌ Clear Pinned</button>
+    </div>
+
+    <label>Curriculum Standards:</label>
+    <textarea id="curriculum" placeholder="Paste curriculum standards here"></textarea>
+
+    <label>Target Grade Level:</label>
+    <textarea id="grade" placeholder="Paste target grade level here"></textarea>
+
+    <div class="btn-row">
+      <button onclick="generate()">▶ Generate</button>
+    </div>
+
+    <h3>Output:</h3>
+    <div class="btn-row">
+      <button onclick="copyOutput()">📋 Copy Output</button>
+    </div>
+    <pre id="output"></pre>
   </div>
 
-  <label>Curriculum Standards:</label>
-  <textarea id="curriculum" placeholder="Paste curriculum standards here"></textarea>
+  <!-- RIGHT COLUMN -->
+  <div class="column">
+    <h2>Line Break Cleaner</h2>
 
-  <label>Target Grade Level:</label>
-  <textarea id="grade" placeholder="Paste target grade level here"></textarea>
+    <label>Paste Text:</label>
+    <textarea id="cleanInput" placeholder="Paste text with multiple line breaks..."></textarea>
 
-  <div class="btn-row">
-    <button onclick="generate()">▶ Generate</button>
+    <div class="btn-row">
+      <button onclick="cleanText()">🧹 Clean</button>
+      <button onclick="copyCleaned()">📋 Copy Cleaned</button>
+    </div>
+
+    <h3>Cleaned Text:</h3>
+    <pre id="cleanOutput"></pre>
   </div>
-
-  <h3>Output:</h3>
-  <div class="btn-row">
-    <button onclick="copyOutput()">📋 Copy Output</button>
-  </div>
-  <pre id="output"></pre>
 
   <script>
-    // Load pinned template on startup
+    // --- Template Filler ---
     window.onload = function() {
       const savedTemplate = localStorage.getItem("pinnedTemplate");
       if (savedTemplate) {
@@ -88,7 +113,6 @@
       const curriculum = document.getElementById("curriculum").value;
       const grade = document.getElementById("grade").value;
 
-      // Replace placeholders
       let finalOutput = template
         .replace("{{CURRICULUMSTANDARDS}}", curriculum)
         .replace("{{TARGETGRADELEVEL}}", grade);
@@ -116,6 +140,25 @@
     function clearPinned() {
       localStorage.removeItem("pinnedTemplate");
       alert("❌ Pinned template cleared!");
+    }
+
+    // --- Cleaner ---
+    function cleanText() {
+      const rawText = document.getElementById("cleanInput").value;
+      // Replace multiple line breaks with a single line break
+      const cleaned = rawText.replace(/\n\s*\n+/g, "\n");
+      document.getElementById("cleanOutput").innerText = cleaned;
+    }
+
+    function copyCleaned() {
+      const text = document.getElementById("cleanOutput").innerText;
+      if (!text.trim()) {
+        alert("⚠️ Nothing to copy!");
+        return;
+      }
+      navigator.clipboard.writeText(text).then(() => {
+        alert("✅ Cleaned text copied!");
+      });
     }
   </script>
 </body>
