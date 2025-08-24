@@ -1,19 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Gemini Template Generator</title>
+  <title>Template Filler</title>
   <style>
     body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; }
     textarea { width: 100%; margin: 10px 0; height: 100px; }
-    button { padding: 10px 15px; border: none; background: #2a5a43; color: white; cursor: pointer; border-radius: 6px; }
-    pre { background: #f4f4f4; padding: 10px; border-radius: 5px; white-space: pre-wrap; }
+    button { padding: 10px 15px; border: none; background: #2a5a43; color: white; cursor: pointer; border-radius: 6px; margin-right: 5px; }
+    pre { background: #f4f4f4; padding: 10px; border-radius: 5px; white-space: pre-wrap; position: relative; }
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #2a5a43;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
   </style>
 </head>
 <body>
-  <h2>Template Generator</h2>
+  <h2>Template Filler</h2>
 
   <label>Template:</label>
   <textarea id="template" placeholder="Example: Create a lesson plan based on {{CURRICULUMSTANDARDS}} for {{TARGETGRADELEVEL}} students."></textarea>
+  <div>
+    <button onclick="pinTemplate()">📌 Pin Template</button>
+    <button onclick="clearPinned()">❌ Clear Pinned</button>
+  </div>
 
   <label>Curriculum Standards:</label>
   <textarea id="curriculum" placeholder="Paste curriculum standards here"></textarea>
@@ -24,45 +40,54 @@
   <button onclick="generate()">Generate</button>
 
   <h3>Output:</h3>
-  <pre id="output"></pre>
+  <div style="position: relative;">
+    <button class="copy-btn" onclick="copyOutput()">Copy</button>
+    <pre id="output"></pre>
+  </div>
 
   <script>
-    const API_KEY = "AIzaSyAplpZmH2KIvyMlvX1jb9IxSbfXSRAR3wk"; // Replace with your Gemini key
+    // Load pinned template on startup
+    window.onload = function() {
+      const savedTemplate = localStorage.getItem("pinnedTemplate");
+      if (savedTemplate) {
+        document.getElementById("template").value = savedTemplate;
+      }
+    };
 
-    async function generate() {
+    function generate() {
       const template = document.getElementById("template").value;
       const curriculum = document.getElementById("curriculum").value;
       const grade = document.getElementById("grade").value;
 
       // Replace placeholders
-      let finalPrompt = template
+      let finalOutput = template
         .replace("{{CURRICULUMSTANDARDS}}", curriculum)
         .replace("{{TARGETGRADELEVEL}}", grade);
 
-      document.getElementById("output").innerText = "⏳ Generating...";
+      document.getElementById("output").innerText = finalOutput;
+    }
 
-      try {
-        const response = await fetch(
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=" + API_KEY,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ role: "user", parts: [{ text: finalPrompt }] }]
-            })
-          }
-        );
+    function copyOutput() {
+      const output = document.getElementById("output").innerText;
+      navigator.clipboard.writeText(output).then(() => {
+        alert("✅ Copied to clipboard!");
+      });
+    }
 
-        const data = await response.json();
-        document.getElementById("output").innerText =
-          data.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No output generated";
-      } catch (error) {
-        document.getElementById("output").innerText = "❌ Error: " + error.message;
+    function pinTemplate() {
+      const template = document.getElementById("template").value;
+      if (template.trim() === "") {
+        alert("⚠️ Template is empty, cannot pin!");
+        return;
       }
+      localStorage.setItem("pinnedTemplate", template);
+      alert("📌 Template pinned!");
+    }
+
+    function clearPinned() {
+      localStorage.removeItem("pinnedTemplate");
+      alert("❌ Pinned template cleared!");
     }
   </script>
 </body>
 </html>
-
-
-
