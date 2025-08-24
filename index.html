@@ -14,10 +14,10 @@
     .column {
       flex: 1; 
       max-width: 50%;
-      padding: 20px;         /* added padding */
-      box-sizing: border-box; /* so padding doesn’t overflow */
-      background: #fafafa;   /* optional: slight background */
-      border-radius: 8px;    /* optional: rounded corners */
+      padding: 20px;         
+      box-sizing: border-box; 
+      background: #fafafa;   
+      border-radius: 8px;    
     }
     h2, h3 { margin-bottom: 10px; }
     label { display: block; margin-top: 15px; margin-bottom: 5px; }
@@ -126,43 +126,34 @@
 
     function copyOutput() {
       const output = document.getElementById("output").innerText;
-      navigator.clipboard.writeText(output).then(() => {
-        alert("✅ Copied to clipboard!");
-      });
+      if (output.trim()) {
+        navigator.clipboard.writeText(output);
+      }
     }
 
     function pinTemplate() {
       const template = document.getElementById("template").value;
-      if (template.trim() === "") {
-        alert("⚠️ Template is empty, cannot pin!");
-        return;
-      }
+      if (template.trim() === "") return;
       localStorage.setItem("pinnedTemplate", template);
-      alert("📌 Template pinned!");
     }
 
     function clearPinned() {
       localStorage.removeItem("pinnedTemplate");
-      alert("❌ Pinned template cleared!");
     }
 
     // --- Cleaner ---
     function cleanText() {
       const rawText = document.getElementById("cleanInput").value;
-      // Replace multiple line breaks with a single line break
-      const cleaned = rawText.replace(/\n\s*\n+/g, "\n");
+      // Replace ALL line breaks with spaces
+      const cleaned = rawText.replace(/\s*\n\s*/g, " ");
       document.getElementById("cleanOutput").innerText = cleaned;
     }
 
     function copyCleaned() {
       const text = document.getElementById("cleanOutput").innerText;
-      if (!text.trim()) {
-        alert("⚠️ Nothing to copy!");
-        return;
+      if (text.trim()) {
+        navigator.clipboard.writeText(text);
       }
-      navigator.clipboard.writeText(text).then(() => {
-        alert("✅ Cleaned text copied!");
-      });
     }
   </script>
 </body>
