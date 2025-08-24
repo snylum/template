@@ -3,22 +3,49 @@
 <head>
   <title>Template Filler</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; }
-    textarea { width: 100%; margin: 10px 0; height: 100px; }
-    button { padding: 10px 15px; border: none; background: #2a5a43; color: white; cursor: pointer; border-radius: 6px; margin-right: 5px; }
-    pre { background: #f4f4f4; padding: 10px; border-radius: 5px; white-space: pre-wrap; position: relative; }
-    .copy-btn {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      background: #2a5a43;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
+    body { 
+      font-family: monospace; 
+      max-width: 700px; 
+      margin: auto; 
+      padding: 20px; 
+      line-height: 1.4;
     }
+    h2, h3 { margin-bottom: 10px; }
+    label { display: block; margin-top: 15px; margin-bottom: 5px; }
+    textarea { 
+      width: 100%; 
+      height: 100px; 
+      font-family: monospace; 
+      font-size: 14px; 
+      padding: 8px; 
+      border: 1px solid #ccc; 
+      border-radius: 5px; 
+      resize: vertical;
+    }
+    button { 
+      font-family: monospace;
+      font-size: 14px;
+      padding: 8px 12px; 
+      border: none; 
+      background: #2a5a43; 
+      color: white; 
+      cursor: pointer; 
+      border-radius: 6px; 
+      margin-right: 6px;
+    }
+    button:hover {
+      background: #244a38;
+    }
+    pre { 
+      background: #f4f4f4; 
+      padding: 12px; 
+      border-radius: 5px; 
+      white-space: pre-wrap; 
+      font-family: monospace; 
+      font-size: 14px; 
+      margin-top: 8px;
+    }
+    .btn-row { margin: 8px 0; }
   </style>
 </head>
 <body>
@@ -26,7 +53,7 @@
 
   <label>Template:</label>
   <textarea id="template" placeholder="Example: Create a lesson plan based on {{CURRICULUMSTANDARDS}} for {{TARGETGRADELEVEL}} students."></textarea>
-  <div>
+  <div class="btn-row">
     <button onclick="pinTemplate()">📌 Pin Template</button>
     <button onclick="clearPinned()">❌ Clear Pinned</button>
   </div>
@@ -37,13 +64,15 @@
   <label>Target Grade Level:</label>
   <textarea id="grade" placeholder="Paste target grade level here"></textarea>
 
-  <button onclick="generate()">Generate</button>
+  <div class="btn-row">
+    <button onclick="generate()">▶ Generate</button>
+  </div>
 
   <h3>Output:</h3>
-  <div style="position: relative;">
-    <button class="copy-btn" onclick="copyOutput()">Copy</button>
-    <pre id="output"></pre>
+  <div class="btn-row">
+    <button onclick="copyOutput()">📋 Copy Output</button>
   </div>
+  <pre id="output"></pre>
 
   <script>
     // Load pinned template on startup
