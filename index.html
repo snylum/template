@@ -1,167 +1,171 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Multi Template Filler & Cleaner</title>
+  <title>Template Generator & Cleaner</title>
   <style>
-    body { 
-      font-family: monospace; 
-      margin: 0; 
-      padding: 20px; 
-      display: flex; 
-      gap: 20px; 
-      line-height: 1.4;
+    body {
+      font-family: monospace;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      padding: 20px;
     }
     .column {
-      flex: 1; 
-      max-width: 50%;
-      padding: 20px;         
-      box-sizing: border-box; 
-      background: #fafafa;   
-      border-radius: 8px;    
+      border: 1px solid #ccc;
+      padding: 20px;
+      border-radius: 8px;
+      background: #f9f9f9;
     }
-    h2, h3 { margin-bottom: 10px; }
-    label { display: block; margin-top: 15px; margin-bottom: 5px; }
-    textarea, input { 
-      font-family: monospace; 
-      font-size: 14px; 
-      padding: 6px; 
-      border: 1px solid #ccc; 
-      border-radius: 5px; 
-    }
-    textarea { width: 100%; height: 80px; resize: vertical; }
-    .placeholder-row {
-      display: flex; 
-      gap: 6px; 
-      margin-bottom: 6px; 
-      align-items: center;
-    }
-    .placeholder-row input {
-      flex: 1;
-    }
-    .placeholder-row button {
-      padding: 2px 6px;
-      background: #d9534f;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .placeholder-row button:hover {
-      background: #b52b27;
-    }
-    button { 
+    textarea, input {
+      width: 100%;
+      margin: 5px 0;
+      padding: 6px;
       font-family: monospace;
       font-size: 14px;
-      padding: 6px 10px; 
-      border: none; 
-      background: #2a5a43; 
-      color: white; 
-      cursor: pointer; 
-      border-radius: 6px; 
-      margin-right: 6px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
     }
-    button:hover { background: #244a38; }
-    pre { 
-      background: #f4f4f4; 
-      padding: 8px; 
-      border-radius: 5px; 
-      white-space: pre-wrap; 
-      font-family: monospace; 
-      font-size: 14px; 
-      margin-top: 8px;
-      max-height: 40px;   /* preview limited height */
-      overflow-y: auto;   /* scroll if long */
+    textarea {
+      resize: vertical;
     }
-    .btn-row { margin: 8px 0; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    button {
+      padding: 5px 10px;
+      margin: 3px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-family: monospace;
+    }
+    .generate-btn { background: #2a5a43; color: white; }
+    .pin-btn { background: #ff9800; color: white; }
+    .remove-btn { background: #d9534f; color: white; }
+    .add-btn { background: #2196f3; color: white; }
+    pre {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 10px;
+      max-height: 3em; /* ~2 lines */
+      overflow-y: scroll;
+      white-space: pre-wrap;
+      border-radius: 5px;
+    }
+    .copy-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
     .checkmark {
       opacity: 0;
       transition: opacity 0.3s ease-in-out;
       color: green;
       font-weight: bold;
     }
-    .checkmark.show { opacity: 1; }
-    .template-box {
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 15px;
-      background: #fff;
+    .checkmark.show {
+      opacity: 1;
+    }
+    .placeholder-row {
+      display: flex;
+      gap: 5px;
+      align-items: flex-start;
+      margin-bottom: 5px;
+    }
+    .placeholder-row input {
+      flex: 1;
+    }
+    .placeholder-row textarea {
+      flex: 2;
+      min-height: 40px;
+    }
+    .placeholder-row button {
+      flex: 0;
     }
   </style>
 </head>
 <body>
-  <!-- LEFT COLUMN -->
+
+  <!-- Column 1: Template Generator -->
   <div class="column">
-    <h2>Template Fillers</h2>
-    <div id="templateContainer"></div>
-    <button onclick="addTemplateFiller()">➕ Add Template Filler</button>
+    <h3>Template Generator</h3>
+
+    <div id="templates"></div>
+    <button class="add-btn" onclick="addTemplate()">+ Add Template</button>
   </div>
 
-  <!-- RIGHT COLUMN -->
+  <!-- Column 2: Text Cleaner -->
   <div class="column">
-    <h2>Line Break Cleaner</h2>
-
-    <label>Paste Text:</label>
-    <textarea id="cleanInput" placeholder="Paste text with multiple line breaks..."></textarea>
-
-    <div class="btn-row">
-      <button onclick="cleanText()">🧹 Clean</button>
-      <button onclick="copyCleaned()">📋 Copy Cleaned</button>
-      <span id="cleanCheck" class="checkmark">✅</span>
+    <h3>Text Cleaner</h3>
+    <textarea id="cleanerInput" placeholder="Paste text here..."></textarea>
+    <div class="copy-container">
+      <button class="generate-btn" onclick="cleanText()">Clean</button>
+      <button class="generate-btn" onclick="copyCleaned()">Copy</button>
+      <span id="cleanCheck" class="checkmark">✔</span>
     </div>
-
-    <h3>Cleaned Text:</h3>
-    <pre id="cleanOutput"></pre>
+    <pre id="cleanerOutput"></pre>
   </div>
 
   <script>
     let templateCounter = 0;
 
-    // --- Add Template Filler ---
-    function addTemplateFiller(savedData = null) {
-      templateCounter++;
-      const id = "template" + templateCounter;
+    function saveTemplates() {
+      const templates = [];
+      document.querySelectorAll("#templates > div").forEach(div => {
+        const id = div.id;
+        const text = div.querySelector(".template-text").value;
+        const placeholders = [];
+        div.querySelectorAll(".placeholder-row").forEach(row => {
+          placeholders.push({
+            key: row.querySelector(".ph-key").value,
+            value: row.querySelector(".ph-value").value
+          });
+        });
+        templates.push({ id, text, placeholders });
+      });
+      localStorage.setItem("templates", JSON.stringify(templates));
+    }
 
-      const container = document.createElement("div");
-      container.className = "template-box";
-      container.id = id;
-
-      container.innerHTML = `
-        <label>Template:</label>
-        <textarea class="template">${savedData?.template || "Example: Hello {{NAME}}, welcome to {{PLACE}}"}</textarea>
-        <div class="btn-row">
-          <button onclick="pinTemplate('${id}')">📌 Pin</button>
-          <button onclick="clearPinned('${id}')">🧹 Clear</button>
-          <button onclick="removeFiller('${id}')">❌ Remove Filler</button>
-        </div>
-
-        <label>Placeholders:</label>
-        <div class="placeholders"></div>
-        <button onclick="addPlaceholder('${id}')">➕ Add Placeholder</button>
-
-        <div class="btn-row">
-          <button onclick="generate('${id}')">▶ Generate</button>
-        </div>
-
-        <h3>Output:</h3>
-        <div class="btn-row">
-          <button onclick="copyOutput('${id}')">📋 Copy</button>
-          <span id="${id}-check" class="checkmark">✅</span>
-        </div>
-        <pre class="output"></pre>
-      `;
-
-      document.getElementById("templateContainer").appendChild(container);
-
-      // Restore pinned placeholders
-      if (savedData?.placeholders) {
-        savedData.placeholders.forEach(ph => addPlaceholder(id, ph.key, ph.value));
+    function loadTemplates() {
+      const saved = JSON.parse(localStorage.getItem("templates") || "[]");
+      if (saved.length === 0) {
+        addTemplate();
       } else {
-        addPlaceholder(id); // start with one row
+        saved.forEach(t => {
+          addTemplate(t.text);
+          const container = document.getElementById("templates").lastElementChild;
+          t.placeholders.forEach(ph => addPlaceholder(container.id, ph.key, ph.value));
+        });
       }
     }
 
-    // --- Add Placeholder Row ---
+    function addTemplate(templateText = "") {
+      const id = "template-" + templateCounter++;
+      const container = document.createElement("div");
+      container.id = id;
+      container.style.marginBottom = "15px";
+
+      container.innerHTML = `
+        <textarea class="template-text" placeholder="Enter template with {{PLACEHOLDERS}}">${templateText}</textarea>
+        <div class="placeholders"></div>
+        <button class="add-btn" onclick="addPlaceholder('${id}')">+ Add Placeholder</button>
+        <div style="margin-top:5px;">
+          <button class="generate-btn" onclick="generateOutput('${id}')">Generate</button>
+          <button class="pin-btn" onclick="pinTemplate('${id}')">📌 Pin</button>
+          <button class="remove-btn" onclick="removeTemplate('${id}')">Remove</button>
+        </div>
+        <div class="copy-container" style="margin-top:5px;">
+          <button class="generate-btn" onclick="copyOutput('${id}')">Copy</button>
+          <span id="${id}-check" class="checkmark">✔</span>
+        </div>
+        <pre id="${id}-output"></pre>
+      `;
+
+      document.getElementById("templates").appendChild(container);
+    }
+
+    function removeTemplate(templateId) {
+      document.getElementById(templateId).remove();
+      saveTemplates();
+    }
+
     function addPlaceholder(templateId, key = "", value = "") {
       const placeholderDiv = document.getElementById(templateId).querySelector(".placeholders");
 
@@ -170,90 +174,64 @@
 
       row.innerHTML = `
         <input type="text" class="ph-key" placeholder="{{PLACEHOLDER}}" value="${key}">
-        <input type="text" class="ph-value" placeholder="Value" value="${value}">
-        <button onclick="this.parentElement.remove()">✖</button>
+        <textarea class="ph-value" placeholder="Value" rows="2">${value}</textarea>
+        <button onclick="this.parentElement.remove(); saveTemplates()">✖</button>
       `;
 
       placeholderDiv.appendChild(row);
+      saveTemplates();
     }
 
-    // --- Generate ---
-    function generate(id) {
-      const box = document.getElementById(id);
-      let template = box.querySelector(".template").value;
-      const rows = box.querySelectorAll(".placeholder-row");
+    function generateOutput(templateId) {
+      const container = document.getElementById(templateId);
+      let template = container.querySelector(".template-text").value;
 
-      rows.forEach(r => {
-        const ph = r.querySelector(".ph-key").value.trim();
-        const val = r.querySelector(".ph-value").value.trim();
-        if (ph && val) {
-          template = template.replaceAll(ph, val);
+      const placeholders = container.querySelectorAll(".placeholder-row");
+      placeholders.forEach(row => {
+        const key = row.querySelector(".ph-key").value.trim();
+        const value = row.querySelector(".ph-value").value;
+        if (key) {
+          template = template.replaceAll(key, value);
         }
       });
 
-      box.querySelector(".output").innerText = template;
+      container.querySelector("pre").innerText = template;
+      saveTemplates();
     }
 
-    // --- Copy with checkmark ---
-    function copyOutput(id) {
-      const box = document.getElementById(id);
-      const text = box.querySelector(".output").innerText;
-      if (text.trim()) {
-        navigator.clipboard.writeText(text);
-        blinkCheck(id + "-check");
-      }
+    function pinTemplate(templateId) {
+      const container = document.getElementById(templateId);
+      document.getElementById("templates").prepend(container);
+      saveTemplates();
+    }
+
+    function copyOutput(templateId) {
+      const text = document.getElementById(templateId).querySelector("pre").innerText;
+      navigator.clipboard.writeText(text);
+      const check = document.getElementById(templateId + "-check");
+      check.classList.add("show");
+      setTimeout(() => check.classList.remove("show"), 1000);
+    }
+
+    function cleanText() {
+      const input = document.getElementById("cleanerInput").value;
+      const cleaned = input.replace(/\s+/g, " ");
+      document.getElementById("cleanerOutput").innerText = cleaned;
     }
 
     function copyCleaned() {
-      const text = document.getElementById("cleanOutput").innerText;
-      if (text.trim()) {
-        navigator.clipboard.writeText(text);
-        blinkCheck("cleanCheck");
-      }
+      const text = document.getElementById("cleanerOutput").innerText;
+      navigator.clipboard.writeText(text);
+      const check = document.getElementById("cleanCheck");
+      check.classList.add("show");
+      setTimeout(() => check.classList.remove("show"), 1000);
     }
 
-    function blinkCheck(elId) {
-      const el = document.getElementById(elId);
-      el.classList.add("show");
-      setTimeout(() => el.classList.remove("show"), 1200);
-    }
+    // Load on page start
+    loadTemplates();
 
-    // --- Pin template filler ---
-    function pinTemplate(id) {
-      const box = document.getElementById(id);
-      const template = box.querySelector(".template").value;
-
-      const placeholders = [];
-      box.querySelectorAll(".placeholder-row").forEach(r => {
-        placeholders.push({
-          key: r.querySelector(".ph-key").value,
-          value: r.querySelector(".ph-value").value
-        });
-      });
-
-      const data = { template, placeholders };
-      localStorage.setItem(id, JSON.stringify(data));
-    }
-
-    function clearPinned(id) {
-      localStorage.removeItem(id);
-    }
-
-    // --- Remove Filler ---
-    function removeFiller(id) {
-      document.getElementById(id).remove();
-      localStorage.removeItem(id);
-    }
-
-    // --- Cleaner ---
-    function cleanText() {
-      const rawText = document.getElementById("cleanInput").value;
-      const cleaned = rawText.replace(/\s*\n\s*/g, " "); // line breaks → space
-      document.getElementById("cleanOutput").innerText = cleaned;
-    }
-
-    // Initialize with one template filler
-    window.onload = () => addTemplateFiller();
+    // Auto-save on edits
+    document.addEventListener("input", () => saveTemplates());
   </script>
 </body>
 </html>
