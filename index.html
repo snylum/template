@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Template Filler & Cleaner</title>
+  <title>Multi Template Filler & Cleaner</title>
   <style>
     body { 
       font-family: monospace; 
@@ -21,20 +21,20 @@
     }
     h2, h3 { margin-bottom: 10px; }
     label { display: block; margin-top: 15px; margin-bottom: 5px; }
-    textarea { 
+    textarea, input { 
       width: 100%; 
-      height: 100px; 
       font-family: monospace; 
       font-size: 14px; 
-      padding: 8px; 
+      padding: 6px; 
       border: 1px solid #ccc; 
       border-radius: 5px; 
       resize: vertical;
     }
+    textarea { height: 80px; }
     button { 
       font-family: monospace;
       font-size: 14px;
-      padding: 8px 12px; 
+      padding: 6px 10px; 
       border: none; 
       background: #2a5a43; 
       color: white; 
@@ -42,49 +42,41 @@
       border-radius: 6px; 
       margin-right: 6px;
     }
-    button:hover {
-      background: #244a38;
-    }
+    button:hover { background: #244a38; }
     pre { 
       background: #f4f4f4; 
-      padding: 12px; 
+      padding: 8px; 
       border-radius: 5px; 
       white-space: pre-wrap; 
       font-family: monospace; 
       font-size: 14px; 
       margin-top: 8px;
-      min-height: 60px;
+      max-height: 40px;   /* preview limited height */
+      overflow-y: auto;   /* scroll if long */
     }
-    .btn-row { margin: 8px 0; }
+    .btn-row { margin: 8px 0; display: flex; align-items: center; gap: 6px; }
+    .checkmark {
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+      color: green;
+      font-weight: bold;
+    }
+    .checkmark.show { opacity: 1; }
+    .template-box {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 15px;
+      background: #fff;
+    }
   </style>
 </head>
 <body>
   <!-- LEFT COLUMN -->
   <div class="column">
-    <h2>Template Filler</h2>
-
-    <label>Template:</label>
-    <textarea id="template" placeholder="Example: Create a lesson plan based on {{CURRICULUMSTANDARDS}} for {{TARGETGRADELEVEL}} students."></textarea>
-    <div class="btn-row">
-      <button onclick="pinTemplate()">📌 Pin Template</button>
-      <button onclick="clearPinned()">❌ Clear Pinned</button>
-    </div>
-
-    <label>Curriculum Standards:</label>
-    <textarea id="curriculum" placeholder="Paste curriculum standards here"></textarea>
-
-    <label>Target Grade Level:</label>
-    <textarea id="grade" placeholder="Paste target grade level here"></textarea>
-
-    <div class="btn-row">
-      <button onclick="generate()">▶ Generate</button>
-    </div>
-
-    <h3>Output:</h3>
-    <div class="btn-row">
-      <button onclick="copyOutput()">📋 Copy Output</button>
-    </div>
-    <pre id="output"></pre>
+    <h2>Template Fillers</h2>
+    <div id="templateContainer"></div>
+    <button onclick="addTemplateFiller()">➕ Add Template Filler</button>
   </div>
 
   <!-- RIGHT COLUMN -->
@@ -97,6 +89,7 @@
     <div class="btn-row">
       <button onclick="cleanText()">🧹 Clean</button>
       <button onclick="copyCleaned()">📋 Copy Cleaned</button>
+      <span id="cleanCheck" class="checkmark">✅</span>
     </div>
 
     <h3>Cleaned Text:</h3>
@@ -104,57 +97,116 @@
   </div>
 
   <script>
-    // --- Template Filler ---
-    window.onload = function() {
-      const savedTemplate = localStorage.getItem("pinnedTemplate");
-      if (savedTemplate) {
-        document.getElementById("template").value = savedTemplate;
+    let templateCounter = 0;
+
+    // --- Add Template Filler ---
+    function addTemplateFiller(savedData = null) {
+      templateCounter++;
+      const id = "template" + templateCounter;
+
+      const container = document.createElement("div");
+      container.className = "template-box";
+      container.id = id;
+
+      container.innerHTML = `
+        <label>Template:</label>
+        <textarea class="template">${savedData?.template || "Example: Hello {{NAME}}, welcome to {{PLACE}}"}</textarea>
+        <div class="btn-row">
+          <button onclick="pinTemplate('${id}')">📌 Pin</button>
+          <button onclick="clearPinned('${id}')">❌ Clear</button>
+        </div>
+
+        <label>Placeholders (format: {{NAME}}=John):</label>
+        <textarea class="placeholders" placeholder="{{X}}=value per line">${savedData?.placeholders || ""}</textarea>
+
+        <div class="btn-row">
+          <button onclick="generate('${id}')">▶ Generate</button>
+        </div>
+
+        <h3>Output:</h3>
+        <div class="btn-row">
+          <button onclick="copyOutput('${id}')">📋 Copy</button>
+          <span id="${id}-check" class="checkmark">✅</span>
+        </div>
+        <pre class="output"></pre>
+      `;
+
+      document.getElementById("templateContainer").appendChild(container);
+
+      // Load pinned template if exists
+      if (!savedData) {
+        const pinned = localStorage.getItem(id);
+        if (pinned) {
+          const parsed = JSON.parse(pinned);
+          container.querySelector(".template").value = parsed.template;
+          container.querySelector(".placeholders").value = parsed.placeholders;
+        }
       }
-    };
-
-    function generate() {
-      const template = document.getElementById("template").value;
-      const curriculum = document.getElementById("curriculum").value;
-      const grade = document.getElementById("grade").value;
-
-      let finalOutput = template
-        .replace("{{CURRICULUMSTANDARDS}}", curriculum)
-        .replace("{{TARGETGRADELEVEL}}", grade);
-
-      document.getElementById("output").innerText = finalOutput;
     }
 
-    function copyOutput() {
-      const output = document.getElementById("output").innerText;
-      if (output.trim()) {
-        navigator.clipboard.writeText(output);
+    // --- Generate ---
+    function generate(id) {
+      const box = document.getElementById(id);
+      let template = box.querySelector(".template").value;
+      const placeholders = box.querySelector(".placeholders").value.split("\n");
+
+      placeholders.forEach(line => {
+        const [ph, val] = line.split("=");
+        if (ph && val) {
+          template = template.replaceAll(ph.trim(), val.trim());
+        }
+      });
+
+      box.querySelector(".output").innerText = template;
+    }
+
+    // --- Copy with checkmark ---
+    function copyOutput(id) {
+      const box = document.getElementById(id);
+      const text = box.querySelector(".output").innerText;
+      if (text.trim()) {
+        navigator.clipboard.writeText(text);
+        blinkCheck(id + "-check");
       }
-    }
-
-    function pinTemplate() {
-      const template = document.getElementById("template").value;
-      if (template.trim() === "") return;
-      localStorage.setItem("pinnedTemplate", template);
-    }
-
-    function clearPinned() {
-      localStorage.removeItem("pinnedTemplate");
-    }
-
-    // --- Cleaner ---
-    function cleanText() {
-      const rawText = document.getElementById("cleanInput").value;
-      // Replace ALL line breaks with spaces
-      const cleaned = rawText.replace(/\s*\n\s*/g, " ");
-      document.getElementById("cleanOutput").innerText = cleaned;
     }
 
     function copyCleaned() {
       const text = document.getElementById("cleanOutput").innerText;
       if (text.trim()) {
         navigator.clipboard.writeText(text);
+        blinkCheck("cleanCheck");
       }
     }
+
+    function blinkCheck(elId) {
+      const el = document.getElementById(elId);
+      el.classList.add("show");
+      setTimeout(() => el.classList.remove("show"), 1200);
+    }
+
+    // --- Pin template filler ---
+    function pinTemplate(id) {
+      const box = document.getElementById(id);
+      const data = {
+        template: box.querySelector(".template").value,
+        placeholders: box.querySelector(".placeholders").value
+      };
+      localStorage.setItem(id, JSON.stringify(data));
+    }
+
+    function clearPinned(id) {
+      localStorage.removeItem(id);
+    }
+
+    // --- Cleaner ---
+    function cleanText() {
+      const rawText = document.getElementById("cleanInput").value;
+      const cleaned = rawText.replace(/\s*\n\s*/g, " "); // line breaks → space
+      document.getElementById("cleanOutput").innerText = cleaned;
+    }
+
+    // Initialize with one template filler
+    window.onload = () => addTemplateFiller();
   </script>
 </body>
 </html>
